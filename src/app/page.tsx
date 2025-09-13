@@ -21,7 +21,8 @@ export default function Home() {
         localStorage.setItem('sessionId', data.sessionId);
         router.push('/interview');
       } else {
-        console.error('Failed to start session');
+        console.error('Failed to start session', data);
+        alert('Sorry, something went wrong. Please check the console for details.');
       }
     } catch (error) {
       console.error('Error starting session:', error);
