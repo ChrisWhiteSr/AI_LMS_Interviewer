@@ -39,9 +39,9 @@ look at .env for API Keys
 
 
 
-## 4) Database Setup — Vercel Postgres
+## 4) Database Setup — Vercel Edge Config
 
-I will add vercel Keys into .env - which ones do you need? Add your response to this question to a new file called - Chris_do this.md
+I will add the Vercel Edge Config connection string to the .env file. Please update the `Chris_do this.md` file with the correct environment variable name.
 
 ### Extra notes 
 

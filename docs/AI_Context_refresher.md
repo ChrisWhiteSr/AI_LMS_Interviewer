@@ -10,7 +10,7 @@ The primary objective is to build a text-based AI learning module to assess a us
 
 *   **Framework:** Next.js (App Router, TypeScript, Tailwind CSS)
 *   **Deployment:** Vercel
-*   **Database:** Vercel Postgres
+*   **Database:** Vercel Edge Config
 *   **AI Provider:** Google Gemini (Pro for reasoning, Flash for simpler tasks)
 *   **Authentication:** None. Users can enter a name or proceed anonymously. A session ID will track individual assessments.
 *   **Administrator View:** A protected route (`/admin`) will serve as a dashboard for the administrator to review all user sessions, including the final AI-generated summary.
