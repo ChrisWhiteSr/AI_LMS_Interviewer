@@ -34,3 +34,33 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Supabase Setup
+
+We are migrating storage from Vercel Edge Config to Supabase (Postgres).
+
+Environment variables (local `.env.local` and Vercel Project Settings):
+
+```
+NEXT_PUBLIC_SUPABASE_URL="https://YOUR-PROJECT.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOi..."     # client reads if needed
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOi..."         # server-only writes/reads
+GEMINI_API_KEY="your-gemini-api-key"
+```
+
+Database schema (run in Supabase SQL editor):
+
+```
+create table if not exists public.sessions (
+  id text primary key,
+  name text,
+  start_time timestamptz not null default now(),
+  questions jsonb not null default '[]'::jsonb,
+  answers jsonb not null default '[]'::jsonb,
+  summary jsonb
+);
+
+alter table public.sessions enable row level security;
+```
+
+See `docs/supabase_migration.md` for full details and the route mapping plan.

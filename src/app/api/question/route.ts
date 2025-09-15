@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { get } from '@vercel/edge-config';
-import { updateEdgeConfig } from '@/lib/edge-config';
+export const runtime = 'nodejs';
+import { getSupabaseServer } from '@/lib/supabase-server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 async function getNewQuestion(history: { role: string, parts: { text: string }[] }[]) {
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
   const chat = model.startChat({
     history,
@@ -23,11 +23,28 @@ async function getNewQuestion(history: { role: string, parts: { text: string }[]
   return text;
 }
 
+type Session = {
+  id: string;
+  name: string;
+  start_time?: string;
+  questions: string[];
+  answers: string[];
+  summary: unknown | null;
+};
+
 export async function POST(request: Request) {
   try {
     const { sessionId } = await request.json();
-    const sessionKey = `session_${sessionId}`;
-    const session: any = await get(sessionKey);
+    const supabase = getSupabaseServer();
+    const { data: session, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single<Session>();
+
+    if (error) {
+      console.error('Supabase select error:', error);
+    }
 
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
@@ -40,8 +57,16 @@ export async function POST(request: Request) {
 
     const newQuestion = await getNewQuestion(history);
 
-    session.questions.push(newQuestion);
-    await updateEdgeConfig(sessionKey, session);
+    const newQuestions = [...(session.questions || []), newQuestion];
+    const { error: updateError } = await supabase
+      .from('sessions')
+      .update({ questions: newQuestions })
+      .eq('id', sessionId);
+
+    if (updateError) {
+      console.error('Supabase update error:', updateError);
+      return NextResponse.json({ error: 'Failed to update session' }, { status: 500 });
+    }
 
     return NextResponse.json({ question: newQuestion });
   } catch (error) {

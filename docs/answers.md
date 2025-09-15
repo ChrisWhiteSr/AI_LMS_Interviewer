@@ -39,12 +39,33 @@ look at .env for API Keys
 
 
 
-## 4) Database Setup — Vercel Edge Config
+## 4) Database Setup — Supabase
 
-I will add the Vercel Edge Config connection string to the .env file. Please update the `Chris_do this.md` file with the correct environment variable name.
+We will use Supabase (Postgres) instead of Edge Config. Add to `.env.local`:
 
-### Extra notes 
+```
+NEXT_PUBLIC_SUPABASE_URL="https://YOUR-PROJECT.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOi..."
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOi..."   # server-only
+```
 
+Create the table in Supabase:
 
-* **Disclaimer:** render on the very first step **before** collecting anything:
+```
+create table if not exists public.sessions (
+  id text primary key,
+  name text,
+  start_time timestamptz not null default now(),
+  questions jsonb not null default '[]'::jsonb,
+  answers jsonb not null default '[]'::jsonb,
+  summary jsonb
+);
+alter table public.sessions enable row level security;
+```
+
+The app uses server-side Supabase with the service role key for writes. See `docs/supabase_migration.md` for details.
+
+### Extra notes
+
+* **Disclaimer:** render on the very first step before collecting anything:
   “This interview is designed to capture your opinions on current topics—there are no right or wrong answers.”
