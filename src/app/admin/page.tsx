@@ -153,9 +153,8 @@ function buildTranscript(session: SessionRecord): TranscriptEntry[] {
   return uniqueOrder
     .map((id) => {
       try {
+        const value = answers[id];
         const question = getQuestionById(id);
-        const value = answers[id];
-        const value = answers[id];
         return {
           id: question.id,
           title: question.title,
