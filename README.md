@@ -1,66 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# AI LMS Interviewer
+
+This app runs a structured technical readiness interview, stores each session in Supabase, and generates a personalized learning plan aligned with the curriculum in docs/Curriculum.md.
 
 ## Getting Started
+1. Install dependencies: 
+pm install.
+2. Copy .env.local.example (if present) or create .env.local with the variables below.
+3. Run the dev server: 
+pm run dev and open http://localhost:3000.
 
-First, run the development server:
+### Required Environment Variables
+`
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+GEMINI_API_KEY=
+# Optional: override summary model
+GEMINI_SUMMARY_MODEL=gemini-1.5-pro
+`
+Edge Config settings (EDGE_CONFIG_ID, VERCEL_API_TOKEN) are only needed if you keep the /welcome middleware route.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Supabase Setup
-
-We are migrating storage from Vercel Edge Config to Supabase (Postgres).
-
-Environment variables (local `.env.local` and Vercel Project Settings):
-
-```
-NEXT_PUBLIC_SUPABASE_URL="https://YOUR-PROJECT.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOi..."     # client reads if needed
-SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOi..."         # server-only writes/reads
-GEMINI_API_KEY="your-gemini-api-key"
-```
-
-Database schema (run in Supabase SQL editor):
-
-```
+## Data Model
+Create the sessions table shown below if it does not exist:
+`
 create table if not exists public.sessions (
   id text primary key,
   name text,
   start_time timestamptz not null default now(),
-  questions jsonb not null default '[]'::jsonb,
-  answers jsonb not null default '[]'::jsonb,
+  questions text[] default '{}',
+  answers jsonb default '{}'::jsonb,
   summary jsonb
 );
+`
+The application stores answers keyed by the question ids defined in src/lib/question-graph.ts. When a session completes, the plan summary is persisted in summary.result.
 
-alter table public.sessions enable row level security;
-```
+## Interview Flow
+- /api/session/start seeds a session and records the first question id.
+- /api/question reads the deterministic graph, returns the next node, and streams a transcript for the UI side bar.
+- /api/answer validates the payload, updates Supabase, and triggers the curriculum summary once all questions are answered.
+- The finish state combines heuristic logic with optional Gemini refinement (see src/lib/curriculum-summary.ts).
 
-See `docs/supabase_migration.md` for full details and the route mapping plan.
+## Admin Dashboard
+Navigate to /admin to review session transcripts and summaries in chronological order. The dashboard calls Supabase directly on the server, so ensure the service role key is available at build time.
+
+## Contributing
+See AGENTS.md for repository conventions, coding style, and PR expectations. When you change the interview graph or curriculum mapping, update the docs under docs/ so the summary logic stays in sync.
+

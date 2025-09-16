@@ -33,7 +33,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-900 text-white">
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">Welcome to the Vibe Coding Interview</h1>
-        <p className="text-lg mb-8">This interview is designed to capture your opinions on current topics—there are no right or wrong answers.</p>
+        <p className="text-lg mb-8">This interview is designed to capture your opinions on current topics - there are no right or wrong answers.</p>
         <div className="flex flex-col items-center">
           <input
             type="text"
